@@ -1,0 +1,10 @@
+# secrets — never commit
+config.json
+notify.log
+
+# dependencies
+node_modules/
+
+# OS noise
+.DS_Store
+Thumbs.db

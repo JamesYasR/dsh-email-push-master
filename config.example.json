@@ -1,0 +1,10 @@
+{
+  "email": {
+    "smtpHost": "",
+    "smtpPort": 465,
+    "useSsl": true,
+    "from": "your-address@qq.com",
+    "authCode": "16-char SMTP authorization code",
+    "to": "recipient@example.com"
+  }
+}

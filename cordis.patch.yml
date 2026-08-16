@@ -1,0 +1,6 @@
+# DSH bundle profile patch.
+# Install: dsh plugin --profile web add dsh-email-push-master
+# (or github:JamesYasR/dsh-email-push-master / link:/path/to/dsh-email-push-master)
+- insert:
+    - id: dsh-email-push-master
+      name: 'dsh-email-push-master'
