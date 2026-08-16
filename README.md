@@ -98,3 +98,12 @@ No compatibility work needed — modern agents are smart. Point them at `SKILL.m
 ## License
 
 [MIT](LICENSE)
+
+
+## Quickstart
+
+```sh
+dsh plugin --profile web add github:JamesYasR/dsh-email-push-master
+```
+
+Restart `dsh web`, then open **Settings → Plugins → 邮件推送** to configure provider / server / sender / auth code / recipient. Or run `node sender.mjs --check` for an auth self-test.
