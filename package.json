@@ -55,5 +55,8 @@
   },
   "scripts": {
     "verify": "node --check index.mjs && node --check sender.mjs && node --check client/client.js"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
