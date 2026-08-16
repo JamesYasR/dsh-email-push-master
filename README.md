@@ -1,4 +1,4 @@
-﻿# dsh-email-push-master
+# dsh-email-push-master
 
 English | [涓枃](README.zh.md)
 

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 // sender.mjs 鈥?zero-dependency SMTP sender for dsh-email-push-master.
 // Node built-ins only (tls/net/fs/path/url). Reads config.json next to this file.
 //
