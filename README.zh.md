@@ -98,3 +98,12 @@ git clone https://github.com/PAKIKNOWLEDGE/dsh-notify-skill.git "$HOME/.dsh/skil
 ## License
 
 [MIT](LICENSE)
+
+
+## 快速开始
+
+```sh
+dsh plugin --profile web add github:JamesYasR/dsh-email-push-master
+```
+
+装完重启 `dsh web`，到 **设置 → 插件 → 邮件推送** 里填写服务商 / 发送服务器 / 发件邮箱 / 密钥 / 收件邮箱即可；也可用 `node sender.mjs --check` 做认证自检。
