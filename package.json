@@ -49,5 +49,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/JamesYasR/dsh-email-push-master.git"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-skill-filesystem": "*"
   }
 }
