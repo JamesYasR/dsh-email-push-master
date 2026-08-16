@@ -84,6 +84,22 @@ function normalizeConfig(input) {
   return { from, authCode, to, host, port, useSsl }
 }
 
+/** Absolute path of the config.json this sender reads. */
+export function getConfigPath() {
+  return CONFIG_PATH
+}
+
+/** Read config.json as the raw `{ email: {...} }` object, or null when absent. */
+export function readConfigFile() {
+  if (!fs.existsSync(CONFIG_PATH)) return null
+  return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
+}
+
+/** Write `{ email: {...} }` back to config.json. */
+export function writeConfigFile(email) {
+  fs.writeFileSync(CONFIG_PATH, `${JSON.stringify({ email }, null, 2)}\n`)
+}
+
 function inferHost(from) {
   const m = /@([^.@]+)\./.exec(String(from || ''))
   if (!m) return ''

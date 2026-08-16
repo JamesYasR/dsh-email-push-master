@@ -18,3 +18,9 @@ This is a hardened fork of [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/P
 
 ### 退出码
 `0` 成功 · `2` 配置错误 · `3` 认证失败(535) · `4` 无权限(550) · `5` 瞬态失败
+
+## 1.1.0 — 图形化配置面板
+
+- 新增 **Web GUI 设置面板**（设置 → 插件 → 「邮件推送」）：展开后可直接填写 **服务商**（163/QQ/自定义）、**发送服务器地址**、**发件邮箱**、**密钥（SMTP 授权码）**、**收件邮箱**，无需再手改 `config.json`。
+- 面板通过主机端 `/dsh-email-push/config`（GET/POST）与 `/dsh-email-push/test`（POST）路由读写配置并做认证自检；密钥从不出现在浏览器回显中（回显掩码 + `hasAuthCode` 标记，留空即保留原值）。
+- 复用 `sender.mjs` 的 `checkAuth` / `readConfigFile` / `writeConfigFile`，配置与 SMTP 逻辑仍是单一来源。
