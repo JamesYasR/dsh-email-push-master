@@ -341,6 +341,10 @@ function exitCode(e) {
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href
 if (isMain) {
   const [a, b] = process.argv.slice(2)
+  if (a === '--version' || a === '-v') {
+    console.log(JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version)
+    process.exit(0)
+  }
   if (a === '--help' || a === '-h') {
     console.log(USAGE)
     process.exit(0)
