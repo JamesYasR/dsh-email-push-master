@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// sender.mjs 鈥?zero-dependency SMTP sender for dsh-email-push-master.
+// sender.mjs — zero-dependency SMTP sender for dsh-email-push-master.
 // Node built-ins only (tls/net/fs/path/url). Reads config.json next to this file.
 //
 // CLI:
@@ -9,7 +9,7 @@
 // API:
 //   import { sendMail, checkAuth, loadConfig } from './sender.mjs'
 //
-// Exit codes: 0 ok 路 2 config 路 3 auth(535) 路 4 no-permission(550) 路 5 transient 路 1 other
+// Exit codes: 0 ok · 2 config · 3 auth(535) · 4 no-permission(550) · 5 transient · 1 other
 
 import tls from 'node:tls'
 import net from 'node:net'
@@ -55,7 +55,7 @@ function classify(code, line, stage) {
 // ---------- config (single source of truth, shared by loadConfig + sendMail) ----------
 export function loadConfig(configPath = CONFIG_PATH) {
   if (!fs.existsSync(configPath)) {
-    throw new ConfigError(`config.json not found at ${configPath} 鈥?copy config.example.json and fill email.from/authCode/to`)
+    throw new ConfigError(`config.json not found at ${configPath} — copy config.example.json and fill email.from/authCode/to`)
   }
   let raw
   try {
@@ -78,7 +78,7 @@ function normalizeConfig(input) {
   if (!from || !authCode || !to) throw new ConfigError('email.from / email.authCode / email.to must all be non-empty')
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from)) throw new ConfigError(`invalid email.from: "${from}"`)
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) throw new ConfigError(`invalid email.to: "${to}"`)
-  if (!host) throw new ConfigError(`cannot infer SMTP host 鈥?set email.smtpHost (from=${from})`)
+  if (!host) throw new ConfigError(`cannot infer SMTP host — set email.smtpHost (from=${from})`)
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new ConfigError(`invalid email.smtpPort: ${email?.smtpPort}`)
 
   return { from, authCode, to, host, port, useSsl }
@@ -244,7 +244,7 @@ function buildMessage(cfg) {
   return headers.join('\r\n') + '\r\n\r\n' + body
 }
 
-// one SMTP session: connect 鈫?EHLO 鈫?AUTH 鈫?[MAIL/RCPT/DATA] 鈫?QUIT
+// one SMTP session: connect → EHLO → AUTH → [MAIL/RCPT/DATA] → QUIT
 async function runSession(cfg, sendBody) {
   const socket = await connectSocket(cfg)
   socket.setTimeout(IDLE_TIMEOUT_MS, () =>
@@ -314,17 +314,17 @@ const USAGE = `Usage:
 
 function printError(e) {
   if (e instanceof ConfigError) {
-    console.error(`dsh-email-push-master: 閰嶇疆閿欒 鈥?${e.message}`)
-    console.error('  淇锛氬鍒?config.example.json 涓?config.json锛屽～鍐?email.from / email.authCode / email.to銆?)
+    console.error(`dsh-email-push-master: 配置错误 — ${e.message}`)
+    console.error('  修复：复制 config.example.json 为 config.json，填写 email.from / email.authCode / email.to。')
   } else if (e instanceof AuthError) {
-    console.error('dsh-email-push-master: 535 璁よ瘉澶辫触 鈥?鎺堟潈鐮佷笉瀵?/ 璐﹀彿琚鎺ч攣瀹?/ SMTP 鏈嶅姟鏈紑鍚€?)
-    console.error('  璇风敤鎴风櫥褰曞彂浠堕偖绠辩綉椤电増鏍稿鎺堟潈鐮佷笌 POP3/SMTP 鏈嶅姟鐘舵€侊紱鍕胯繛缁噸璇曪紙浼氬姞鍓ч鎺э級銆?)
+    console.error('dsh-email-push-master: 535 认证失败 — 授权码不对 / 账号被风控锁定 / SMTP 服务未开启。')
+    console.error('  请用户登录发件邮箱网页版核对授权码与 POP3/SMTP 服务状态；勿连续重试（会加剧风控）。')
   } else if (e instanceof PermissionError) {
-    console.error('dsh-email-push-master: 550 鏃犳潈闄?鈥?璇ヨ处鍙锋湭寮€鍚?SMTP/瀹㈡埛绔巿鏉冩湇鍔°€?)
-    console.error('  璇风敤鎴风櫥褰曠綉椤电増 鈫?璁剧疆 鈫?POP3/SMTP/IMAP 鈫?寮€鍚苟鐢熸垚鎺堟潈鐮併€?)
+    console.error('dsh-email-push-master: 550 无权限 — 该账号未开启 SMTP/客户端授权服务。')
+    console.error('  请用户登录网页版 → 设置 → POP3/SMTP/IMAP → 开启并生成授权码。')
   } else if (e instanceof TransientError) {
-    console.error(`dsh-email-push-master: 鏆傛椂澶辫触锛堢綉缁?瓒呮椂锛夆€?${e.message}`)
-    console.error('  绋嶅悗閲嶈瘯鍗冲彲銆?)
+    console.error(`dsh-email-push-master: 暂时失败（网络/超时）— ${e.message}`)
+    console.error('  稍后重试即可。')
   } else {
     console.error(`dsh-email-push-master: ${e.message}`)
   }

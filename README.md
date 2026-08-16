@@ -1,10 +1,10 @@
 # dsh-email-push-master
 
-English | [涓枃](README.zh.md)
+English | [中文](README.zh.md)
 
 **Email reminders from your DSH agent when you're away from the computer.**
 
-You start a long-running goal in [DSH](https://github.com/deepseek-ai) (or any AI coding agent), then walk away. When the agent finishes, gets blocked, or needs your decision, it sends an email to your phone mailbox 鈥?you see it and come back. One-way ping, no remote control.
+You start a long-running goal in [DSH](https://github.com/deepseek-ai) (or any AI coding agent), then walk away. When the agent finishes, gets blocked, or needs your decision, it sends an email to your phone mailbox — you see it and come back. One-way ping, no remote control.
 
 ## Origin & what changed
 
@@ -17,7 +17,7 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 ## Design: bundle a sender, avoid hand-written fallbacks
 
-The skill ships **one zero-dependency implementation** 鈥?`sender.mjs` (only Node built-ins `tls`/`net`), so the agent sends mail deterministically in every normal DSH session (DSH runs on Node). The sender has connect/idle timeouts, structured error classification (`535`/`550`/network), **never retries `535`** (retries amplify risk-control lockout), and full message headers. The `SKILL.md` still carries the full contract:
+The skill ships **one zero-dependency implementation** — `sender.mjs` (only Node built-ins `tls`/`net`), so the agent sends mail deterministically in every normal DSH session (DSH runs on Node). The sender has connect/idle timeouts, structured error classification (`535`/`550`/network), **never retries `535`** (retries amplify risk-control lockout), and full message headers. The `SKILL.md` still carries the full contract:
 
 - **when** to notify (goal done / blocked / before asking you a decision / long-task milestone),
 - **what** to write (specific, in your language, short),
@@ -43,11 +43,11 @@ node sender.mjs "subject" "body"          # reads config.json next to it and sen
 node sender.mjs --check                   # verify config + SMTP auth only, no email
 ```
 
-> Knowledge note (Windows): .NET `SmtpClient` has a known hang on implicit-TLS port 465 鈥?the bundled sender uses `node:tls` instead, which has no such issue.
+> Knowledge note (Windows): .NET `SmtpClient` has a known hang on implicit-TLS port 465 — the bundled sender uses `node:tls` instead, which has no such issue.
 
 ## Install (DSH)
 
-**Plugin install (recommended)** 鈥?the skill ships as a DSH plugin and registers on `ctx.skills`:
+**Plugin install (recommended)** — the skill ships as a DSH plugin and registers on `ctx.skills`:
 
 ```bash
 dsh plugin --profile web add dsh-email-push-master
@@ -55,7 +55,7 @@ dsh plugin --profile web add dsh-email-push-master
 
 Or from GitHub: `dsh plugin --profile web add github:JamesYasR/dsh-email-push-master`. Restart `dsh web` once after installing, then the skill appears in the session skill catalog.
 
-**Manual install (no plugin)** 鈥?DSH also discovers skills from `<dshHome>/skills/<name>/SKILL.md` (default `~/.dsh/skills`), hot-reloaded by a filesystem watcher:
+**Manual install (no plugin)** — DSH also discovers skills from `<dshHome>/skills/<name>/SKILL.md` (default `~/.dsh/skills`), hot-reloaded by a filesystem watcher:
 
 ```bash
 git clone https://github.com/JamesYasR/dsh-email-push-master.git "$HOME/.dsh/skills/notify"
@@ -68,8 +68,8 @@ Or copy the folder manually to `~/.dsh/skills/notify/`. New sessions pick it up 
 The agent will also walk you through this if you just ask it to use the skill.
 
 1. Get an SMTP **authorization code** (not your login password):
-   - **QQ Mail**: web QQ Mail 鈫?璁剧疆 鈫?璐︽埛 鈫?enable "POP3/SMTP 鏈嶅姟" 鈫?generate a 16-char 鎺堟潈鐮?
-   - **163 Mail**: web 163 Mail 鈫?璁剧疆 鈫?POP3/SMTP/IMAP/SMTP 鈫?enable 鈫?create 鎺堟潈鐮?
+   - **QQ Mail**: web QQ Mail → 设置 → 账户 → enable "POP3/SMTP 服务" → generate a 16-char 授权码
+   - **163 Mail**: web 163 Mail → 设置 → POP3/SMTP/IMAP/SMTP → enable → create 授权码
 2. Copy `config.example.json` to `config.json` and fill it in:
    ```json
    {
@@ -83,16 +83,16 @@ The agent will also walk you through this if you just ask it to use the skill.
      }
    }
    ```
-   `smtpHost` may be left empty 鈥?it is inferred (`@qq.com` 鈫?`smtp.qq.com`, `@163.com` 鈫?`smtp.163.com`, port 465 SSL).
+   `smtpHost` may be left empty — it is inferred (`@qq.com` → `smtp.qq.com`, `@163.com` → `smtp.163.com`, port 465 SSL).
 3. Test: ask your agent to send a test notification (it will use the bundled sender).
 
 ## Other agents (Claude Code, Codex, ...)
 
-No compatibility work needed 鈥?modern agents are smart. Point them at `SKILL.md` and the config contract; they should use the bundled sender rather than re-implementing SMTP.
+No compatibility work needed — modern agents are smart. Point them at `SKILL.md` and the config contract; they should use the bundled sender rather than re-implementing SMTP.
 
 ## Security
 
-- `config.json` (contains your SMTP authorization code) and `notify.log` are **gitignored** 鈥?never force-commit them. A leaked authorization code lets anyone send mail as your mailbox.
+- `config.json` (contains your SMTP authorization code) and `notify.log` are **gitignored** — never force-commit them. A leaked authorization code lets anyone send mail as your mailbox.
 - The skill instructs agents to never print or commit the authorization code.
 
 ## License
@@ -106,4 +106,4 @@ No compatibility work needed 鈥?modern agents are smart. Point them at `SKILL.m
 dsh plugin --profile web add github:JamesYasR/dsh-email-push-master
 ```
 
-Restart `dsh web`, then open **Settings 鈫?Plugins 鈫?閭欢鎺ㄩ€?* to configure provider / server / sender / auth code / recipient. Or run `node sender.mjs --check` for an auth self-test.
+Restart `dsh web`, then open **Settings → Plugins → 邮件推送** to configure provider / server / sender / auth code / recipient. Or run `node sender.mjs --check` for an auth self-test.
