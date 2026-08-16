@@ -52,5 +52,8 @@
   },
   "peerDependencies": {
     "@deepseek-ai/dsh-skill-filesystem": "*"
+  },
+  "scripts": {
+    "verify": "node --check index.mjs && node --check sender.mjs && node --check client/client.js"
   }
 }
