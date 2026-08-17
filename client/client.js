@@ -31,9 +31,10 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
     field: { display: "flex", flexDirection: "column", gap: "6px" },
     label: { fontSize: "12px", opacity: 0.75, fontWeight: 500 },
     input: {
-      boxSizing: "border-box", width: "100%", padding: "8px 10px",
-      borderRadius: "6px", border: "1px solid rgba(128,128,128,0.35)",
-      background: "transparent", color: "inherit", fontSize: "13px",
+      boxSizing: "border-box", width: "100%", height: 34,
+      borderRadius: "8px", border: "1px solid var(--dsw-alias-border-l2)",
+      background: "var(--dsw-alias-bg-layer-3)", color: "var(--dsw-alias-label-primary)",
+      padding: "0 12px", fontSize: "13px",
     },
     actions: { display: "flex", gap: "8px", marginTop: "4px" },
     btn: {
@@ -49,14 +50,35 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
     root: { listStyle: "none", margin: 0, padding: 0 },
     head: {
       display: "flex", alignItems: "center", gap: "12px", width: "100%",
-      padding: "10px 12px", background: "transparent", border: "none",
+      padding: "14px 16px", background: "transparent", border: "none",
       cursor: "pointer", color: "inherit", textAlign: "left", fontSize: "13px",
     },
-    headText: { display: "flex", flexDirection: "column", gap: "2px", flex: 1, minWidth: 0 },
-    name: { fontWeight: 600, fontSize: "13px" },
-    desc: { fontSize: "12px", opacity: 0.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-    gear: { fontSize: "12px", opacity: 0.7, flexShrink: 0 },
+    headText: { display: "flex", flexDirection: "column", gap: "4px", flex: 1, minWidth: 0 },
+    name: { fontWeight: 600, fontSize: "15px" },
+    desc: { fontSize: "13px", opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+    gear: { fontSize: "13px", opacity: 0.75, flexShrink: 0 },
   };
+
+  // Card visuals matching the built-in settings cards (border + layered
+  // background + radius). Injected as real CSS so :hover works.
+  var CARD_CSS =
+    ".dsh-ep-card{border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-3);border-radius:12px;list-style:none;transition:border-color .16s,background .16s}" +
+    ".dsh-ep-card:hover{border-color:var(--dsw-alias-label-dimmed)}" +
+    ".dsh-ep-head{appearance:none;width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer;background:0 0;border:0;border-radius:12px;align-items:center;gap:12px;padding:14px 16px;display:flex}" +
+    ".dsh-ep-head:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}" +
+    ".dsh-ep-headText{flex-direction:column;flex:1;gap:4px;min-width:0;display:flex}" +
+    ".dsh-ep-name{color:var(--dsw-alias-label-primary);font-size:15px;font-weight:600;line-height:1.4}" +
+    ".dsh-ep-desc{color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:1.5}" +
+    ".dsh-ep-gear{color:var(--dsw-alias-label-tertiary);font-size:13px;flex:none}";
+
+  function installCardStyles() {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("dsh-ep-styles")) return;
+    var el = document.createElement("style");
+    el.id = "dsh-ep-styles";
+    el.textContent = CARD_CSS;
+    (document.head || document.documentElement).appendChild(el);
+  }
 
   function Field(props) {
     return h("div", { style: formStyles.field }, h("label", { style: formStyles.label }, props.label), props.children);
@@ -183,12 +205,12 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
 
     React.useEffect(function () { refreshSummary(); }, []);
 
-    return h("li", { style: cardStyles.root },
-      h("button", { type: "button", style: cardStyles.head, onClick: function () { setOpen(true); } },
-        h("div", { style: cardStyles.headText },
-          h("div", { style: cardStyles.name }, "邮件推送"),
-          h("div", { style: cardStyles.desc }, summary)),
-        h("span", { style: cardStyles.gear }, "⚙ 配置")),
+    return h("li", { className: "dsh-ep-card" },
+      h("button", { type: "button", className: "dsh-ep-head", onClick: function () { setOpen(true); } },
+        h("div", { className: "dsh-ep-headText" },
+          h("div", { className: "dsh-ep-name" }, "邮件推送"),
+          h("div", { className: "dsh-ep-desc" }, summary)),
+        h("span", { className: "dsh-ep-gear" }, "⚙ 配置")),
       open && Modal
         ? h(Modal, {
             open: true,
@@ -207,6 +229,7 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
   exports.name = "dsh-email-push-master";
   exports.inject = ["slots"];
   exports.apply = function (ctx) {
+    installCardStyles();
     ctx.slots.inject("settings.plugin.item", function* () {
       yield ctx.slots.register({
         name: "settings.plugin.item",
