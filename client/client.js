@@ -144,9 +144,9 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
   exports.name = "dsh-email-push-master";
   exports.inject = ["slots"];
   exports.apply = function (ctx) {
-    ctx.slots.inject("settings.section", function () {
-      return ctx.slots.register({
-        name: "settings.section",
+    ctx.slots.inject("settings.plugin.item", function* () {
+      yield ctx.slots.register({
+        name: "settings.plugin.item",
         id: "dsh-email-push",
         order: 50,
         label: function () { return "邮件推送"; },
