@@ -233,7 +233,7 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
     ctx.slots.inject("settings.plugin.item", function* () {
       yield ctx.slots.register({
         name: "settings.plugin.item",
-        id: "dsh-email-push",
+        key: "dsh-email-push",
         order: 50,
         label: function () { return "邮件推送"; },
       }, function () { return h(EmailPushCard); });
