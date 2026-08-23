@@ -51,7 +51,9 @@
     "url": "https://github.com/JamesYasR/dsh-email-push-master.git"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-skill-filesystem": "*"
+    "@deepseek-ai/dsh-skill-filesystem": "*",
+    "@deepseek-ai/dsh-settings": "*",
+    "@deepseek-ai/schemastery": "*"
   },
   "scripts": {
     "verify": "node --check index.mjs && node --check sender.mjs && node --check client/client.js"

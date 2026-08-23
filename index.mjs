@@ -1,4 +1,6 @@
 import { fileURLToPath } from 'node:url'
+import z from '@deepseek-ai/schemastery'
+import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { FileSystemSkillProvider } from '@deepseek-ai/dsh-skill-filesystem'
 import { checkAuth, readConfigFile, writeConfigFile } from './sender.mjs'
 
@@ -6,6 +8,23 @@ export const name = 'dsh-email-push-master'
 export const inject = ['skills']
 
 const MASKED = '\u2022'.repeat(16)
+
+// The settings namespace backing the Web GUI card. DSH renders a configurable
+// card from `settings.plugin.item` only for namespaces the Host actually
+// serves (Settings → Plugins → “configurable”), so the client card must have a
+// matching host namespace or it is silently never dispatched. The actual
+// secrets still live in config.json (single source of truth); this namespace
+// is only the dispatch key the settings describe mirror advertises.
+const EMAIL_PUSH_NS = 'dsh-email-push'
+
+const EmailConfig = z.object({
+  smtpHost: z.string().default(''),
+  smtpPort: z.number().default(465),
+  useSsl: z.boolean().default(true),
+  from: z.string().default(''),
+  authCode: z.string().role('secret').default(''),
+  to: z.string().default(''),
+})
 
 function sendJson(res, code, body) {
   res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
@@ -142,5 +161,12 @@ export function apply(ctx) {
         disposeTest()
       }
     }, 'dsh-email-push: http routes')
+  })
+
+  // Advertise the `dsh-email-push` settings namespace so the Host's describe
+  // mirror serves it and the client card (keyed `dsh-email-push`) actually
+  // renders under Settings → Plugins → “configurable”.
+  ctx.inject(['settings'], (sctx) => {
+    sctx.settings.register(settingsNamespace(EMAIL_PUSH_NS), EmailConfig)
   })
 }

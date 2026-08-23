@@ -3,6 +3,11 @@
 本项目是从 [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/PAKIKNOWLEDGE/dsh-notify-skill) fork 的加固版。
 This is a hardened fork of [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/PAKIKNOWLEDGE/dsh-notify-skill).
 
+## 1.1.1 — 修复设置面板不显示
+
+### 修复的 bug
+- **设置 → 插件 → 「邮件推送」面板不显示**：DSH 的 `settings.plugin.item` 卡片只会被派发给 **Host 实际提供服务**（`settings.describe` 返回）的命名空间。此前插件只注册了 HTTP 路由和 skill，从未注册 `dsh-email-push` 设置命名空间，因此客户端卡片永远被过滤掉。现在在主机端注册该命名空间，面板即可正常出现在「可配置」页。
+
 ## 1.0.0 — 稳定性 / 严谨性加固
 
 ### 修复的 bug
