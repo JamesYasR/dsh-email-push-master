@@ -3,10 +3,15 @@
 本项目是从 [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/PAKIKNOWLEDGE/dsh-notify-skill) fork 的加固版。
 This is a hardened fork of [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/PAKIKNOWLEDGE/dsh-notify-skill).
 
-## 1.1.1 — 修复设置面板不显示
+## 1.2.0 — 修复设置面板不显示 + 配置持久化
 
 ### 修复的 bug
 - **设置 → 插件 → 「邮件推送」面板不显示**：DSH 的 `settings.plugin.item` 卡片只会被派发给 **Host 实际提供服务**（`settings.describe` 返回）的命名空间。此前插件只注册了 HTTP 路由和 skill，从未注册 `dsh-email-push` 设置命名空间，因此客户端卡片永远被过滤掉。现在在主机端注册该命名空间，面板即可正常出现在「可配置」页。
+- **重装插件/依赖后配置丢失、agent 找不到配置文件**：`config.json` 原本写在插件包目录（`node_modules`）里，任何一次 `pnpm install`（例如新增别的插件）都会把它连同整个包目录一起删掉。现在配置改存到**持久路径** `~/.config/dsh-email-push-master/config.json`（可用 `DSH_EMAIL_PUSH_CONFIG` 覆盖），写入时自动建目录，重装不再丢失。
+- **修复本身不再被重装冲掉**：安装方（profile）用 `patchedDependencies` 把上述两处修复固化为每次安装自动重放。
+
+### 行为变化
+- `config.json` 位置：`<包目录>/config.json` → `~/.config/dsh-email-push-master/config.json`。旧的配置在安装后若已存在会被忽略，请到 设置 → 插件 → 邮件推送 重新填写一次。
 
 ## 1.0.0 — 稳定性 / 严谨性加固
 
