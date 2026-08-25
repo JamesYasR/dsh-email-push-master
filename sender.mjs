@@ -14,11 +14,17 @@
 import tls from 'node:tls'
 import net from 'node:net'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
+// Config lives OUTSIDE the package dir (node_modules is wiped on every pnpm
+// install, which previously deleted the user's config.json and broke the
+// agent's lookup). Persistent per-user path; relocate with DSH_EMAIL_PUSH_CONFIG.
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const CONFIG_PATH = path.join(HERE, 'config.json')
+const CONFIG_PATH = process.env.DSH_EMAIL_PUSH_CONFIG
+  ? path.resolve(process.env.DSH_EMAIL_PUSH_CONFIG)
+  : path.join(os.homedir(), '.config', 'dsh-email-push-master', 'config.json')
 
 const CONNECT_TIMEOUT_MS = 15000
 const IDLE_TIMEOUT_MS = 30000
@@ -97,6 +103,7 @@ export function readConfigFile() {
 
 /** Write `{ email: {...} }` back to config.json. */
 export function writeConfigFile(email) {
+  fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true })
   fs.writeFileSync(CONFIG_PATH, `${JSON.stringify({ email }, null, 2)}\n`)
 }
 

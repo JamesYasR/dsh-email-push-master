@@ -14,7 +14,8 @@ One-way ping via the bundled zero-dependency Node sender. Always use it; never h
 node "<pkg-root>/sender.mjs" "subject" "body"
 ```
 
-- `sender.mjs` and `config.json` live at the package root, two directories above this `SKILL.md` (`../../sender.mjs`). `config.json` sits next to it.
+- `sender.mjs` lives at the package root, two directories above this `SKILL.md` (`../../sender.mjs`).
+- `config.json` is stored in a **persistent** location (survives plugin reinstalls): `~/.config/dsh-email-push-master/config.json` (override with `DSH_EMAIL_PUSH_CONFIG`). Check that path — do NOT look inside `node_modules`, where a copy may be stale or missing after an install.
 - Verify config + auth without sending: `node "<pkg-root>/sender.mjs" --check`
 - Exit codes: `0` ok · `2` config · `3` auth(535) · `4` no-permission(550) · `5` transient.
 
