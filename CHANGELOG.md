@@ -3,6 +3,15 @@
 本项目是从 [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/PAKIKNOWLEDGE/dsh-notify-skill) fork 的加固版。
 This is a hardened fork of [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/PAKIKNOWLEDGE/dsh-notify-skill).
 
+## 1.2.1 — 修复 dsh 0.1.2-rc.1 启动崩溃（settingsNamespace 移除）
+
+### 修复的 bug
+- **dsh 升级到 0.1.2-rc.1 后启动崩溃**：`@deepseek-ai/dsh-settings@0.1.2-rc.1` 移除了对 `settingsNamespace` 的命名导出（内部改为 `parseSettingsNamespace`）。插件在 `index.mjs` 顶层 `import { settingsNamespace } ...`，导致 `dsh-start` 每次自动更新后 ESM 加载失败并整体退出。现在改为直接向 `sctx.settings.register(EMAIL_PUSH_NS, ...)` 传入命名空间字符串——`SettingsProvider.register()` 内部会用同样的 `/^[a-z][a-z0-9-]*$/` 校验，行为不变，且不再依赖任何版本中易变的内部导出。
+- 插件不再需要 `@deepseek-ai/dsh-settings` 的任何导出，避免未来 dsh-settings 再变动时重复崩。
+
+### 验证
+- `node --check index.mjs` 通过；直接 `import('./index.mjs')` 成功。
+
 ## 1.2.0 — 修复设置面板不显示 + 配置持久化
 
 ### 修复的 bug

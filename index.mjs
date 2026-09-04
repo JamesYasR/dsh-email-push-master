@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url'
 import z from '@deepseek-ai/schemastery'
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { FileSystemSkillProvider } from '@deepseek-ai/dsh-skill-filesystem'
 import { checkAuth, readConfigFile, writeConfigFile } from './sender.mjs'
 
@@ -167,6 +166,6 @@ export function apply(ctx) {
   // mirror serves it and the client card (keyed `dsh-email-push`) actually
   // renders under Settings → Plugins → “configurable”.
   ctx.inject(['settings'], (sctx) => {
-    sctx.settings.register(settingsNamespace(EMAIL_PUSH_NS), EmailConfig)
+    sctx.settings.register(EMAIL_PUSH_NS, EmailConfig)
   })
 }

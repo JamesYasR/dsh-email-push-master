@@ -1,6 +1,6 @@
 {
   "name": "dsh-email-push-master",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Email reminders from your DSH agent when you're away — a hardened fork of dsh-notify-skill: stable SMTP (no 535 retry loop), connect/idle timeouts, --check self-test, and full message headers.",
   "type": "module",
   "license": "MIT",
