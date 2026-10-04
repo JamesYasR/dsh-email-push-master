@@ -3,6 +3,50 @@
 本项目是从 [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/PAKIKNOWLEDGE/dsh-notify-skill) fork 的加固版。
 This is a hardened fork of [PAKIKNOWLEDGE/dsh-notify-skill](https://github.com/PAKIKNOWLEDGE/dsh-notify-skill).
 
+## 1.3.0 — 适配 DSH 0.2.0-rc.2（设置页 slot 重命名 + 设置 API 移除）
+
+对照实际发布的 DSH `0.2.0-rc.2`（当前 npm `latest`）逐项核对宿主端与客户端 API。1.2.1 是针对
+`0.1.2-rc.1` 修的，本轮发现两处**在新版上必然失效**的调用。
+
+### 修复的 bug
+- **设置面板在 DSH 0.2.0-rc.2 上永远不显示**：客户端注册的 slot `settings.plugin.item` 已从 DSH 中
+  **整体移除**（全量检索 `@deepseek-ai/*` 零命中）。`ctx.slots.inject()` 会等待 slot 声明，声明永不出现时
+  它**静默不注册**——不报错，也没有任何界面。现改为注册到当前契约 `settings.section`（`list` 类型，
+  用 `id` 寻址），即 **设置 → 邮件推送** 一个独立设置页。这也与在用的第三方插件 `@xmanrui/dsh-im@4.34.2`
+  的做法一致。
+  - 旧 slot 是 **keyed** 用 `key` 寻址；新 slot 是 **list** 用 `id` 寻址。若只改名字不改寻址字段，
+    `register()` 会直接抛 `list slot "plugins.section" requires options.id`。
+  - 新版 `settings.section` 是整页（owner props 为 `{ close }`），因此移除了"列表卡片 + Modal"的两段式 UI，
+    改为直接渲染设置页；`@deepseek-ai/dsh-client-ui-primitives` 的 `Modal` 依赖随之去掉（客户端现在只
+    `require("react")`，而 `react` 是浏览器基座内置的 seed 模块，无需任何 external 声明）。
+- **宿主端启动崩溃**：`index.mjs` 调用 `sctx.settings.register(ns, schema)` 让卡片渲染。DSH 0.2.0-rc.2 的
+  `@deepseek-ai/dsh-settings` 只导出 `SettingsForms`，**没有 `register()`**（只有 `configure()`）——
+  该调用会抛 `TypeError: sctx.settings.register is not a function` 并带崩插件加载。已整体移除：
+  本插件的配置真相在 `config.json`，UI 走自己的 HTTP 路由，**不需要**注册任何 DSH 设置命名空间。
+  `@deepseek-ai/dsh-settings` 与 `@deepseek-ai/schemastery` 两个依赖也一并从 `peerDependencies` 去掉。
+
+### 清单（package.json）加固
+- **`dsh.client.inject` 里有一个不存在的包**：`@deepseek-ai/dsh-client-runtime` 在 0.2.0-rc.2 中已无此包
+  （`@xmanrui/dsh-im` 也带着同一个过时名字）。`inject` 只是加载顺序提示、未命中会被静默跳过，所以它
+  不是崩溃原因，但属于误导；现已删除该项（本客户端只依赖 seed 模块，不需要 `inject`/`external`）。
+- **peerDependencies 改为真实范围**：`"*"` 在兼容性校验里恒为真，等于关掉了 DSH 的保护；现改为
+  `@deepseek-ai/dsh-skill-filesystem: ">=0.2.0-rc.2 <0.3.0-0"`，让不兼容的 DSH 在**安装阶段**就被明确拒绝
+  （`dsh: installation rejected: ...`），而不是运行期静默出问题。
+- 补充 `dsh.manifestVersion: 1`、`dsh.compatibility`、`engines.dsh`、`publishConfig.access: public`。
+- `files` 补上 `SECURITY.md`（此前会被漏出 npm tarball）。
+- 版本号 1.2.1 → 1.3.0（含破坏性变更：不再支持 `< 0.2.0-rc.2`）。
+
+### 验证（全部针对真实 DSH 0.2.0-rc.2 运行时）
+- `npm run verify` 三个文件语法通过。
+- 直接调用 DSH 自身的 `evaluatePluginCompatibility(manifest, {}, "0.2.0-rc.2")` → 返回 `undefined`（兼容）。
+- 用 DSH 自身的 `loadProfile`/`--dump-config` 在**隔离的 DSH_HOME** 里真实安装（`dsh plugin --profile web add link:...`）
+  并展开 profile 树：插件被写入 `dsh.profile.bundles`，其补丁层贡献了 `- id: dsh-email-push-master` 行，
+  退出码 0、stderr 为空、无 `disabled`、无 incompatibility 提示。
+- 在真实 cordis 应用里以 DSH 自己的 `skills`(dsh-skill) 与 `webServer`(dsh-host-webserver) 服务启动插件：
+  `notify` skill 注册成功且内容来自 `skills/notify/SKILL.md`；`/dsh-email-push/config` GET/POST 正常读写
+  `config.json`（写在包目录之外）；授权码只返回掩码、原文不进响应体、留空提交保留原值；跨源 POST 403；
+  `GET /test` 405；SMTP 不可达时 `/test` 返回 502 与结构化错误。
+
 ## 1.2.1 — 修复 dsh 0.1.2-rc.1 启动崩溃（settingsNamespace 移除）
 
 ### 修复的 bug

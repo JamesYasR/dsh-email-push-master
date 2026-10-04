@@ -45,6 +45,21 @@ node sender.mjs --check                   # verify config + SMTP auth only, no e
 
 > Knowledge note (Windows): .NET `SmtpClient` has a known hang on implicit-TLS port 465 — the bundled sender uses `node:tls` instead, which has no such issue.
 
+## Compatibility
+
+| DSH version | Status |
+|---|---|
+| `0.2.0-rc.2` (current npm `latest`) | Supported — verified against the shipped runtime |
+| `< 0.2.0-rc.2` (e.g. `0.1.2-rc.1`) | Not supported — 1.3.0 targets the current plugin APIs |
+| `>= 0.3.0` | Not yet — update the plugin when DSH changes its plugin APIs |
+
+DSH refuses to install a plugin whose `@deepseek-ai/dsh-*` **peerDependencies** do not satisfy the running
+runtime, so an unsupported combination fails loudly at install time instead of crashing later:
+
+```text
+dsh: installation rejected: Plugin dsh-email-push-master@1.3.0 is incompatible with dsh 0.3.0: peerDependencies {...}
+```
+
 ## Install (DSH)
 
 **Plugin install (recommended)** — the skill ships as a DSH plugin and registers on `ctx.skills`:
@@ -54,6 +69,16 @@ dsh plugin --profile web add dsh-email-push-master
 ```
 
 Or from GitHub: `dsh plugin --profile web add github:JamesYasR/dsh-email-push-master`. Restart `dsh web` once after installing, then the skill appears in the session skill catalog.
+
+For the **desktop app**, either install into the `desktop` profile (quit the app completely first — it holds the
+profile lock):
+
+```bash
+dsh plugin --profile desktop add dsh-email-push-master
+```
+
+…or install into the `web` profile and use the browser GUI at the URL `dsh web` prints. Both share the same
+web-based client UI, since the desktop shell serves the same web server.
 
 **Manual install (no plugin)** — DSH also discovers skills from `<dshHome>/skills/<name>/SKILL.md` (default `~/.dsh/skills`), hot-reloaded by a filesystem watcher:
 
@@ -106,4 +131,9 @@ No compatibility work needed — modern agents are smart. Point them at `SKILL.m
 dsh plugin --profile web add github:JamesYasR/dsh-email-push-master
 ```
 
-Restart `dsh web`, then open **Settings → Plugins → 邮件推送** to configure provider / server / sender / auth code / recipient. Or run `node sender.mjs --check` for an auth self-test.
+Restart `dsh web`, then open **Settings → 邮件推送** (邮件推送 = “Email push”) to configure provider / server /
+sender / auth code / recipient. Or run `node sender.mjs --check` for an auth self-test.
+
+The settings page is backed by the host's `/dsh-email-push/config` and `/dsh-email-push/test` routes; the SMTP
+authorization code is never echoed back to the browser (masked echo + `hasAuthCode` flag — leave it blank to keep
+the stored value).

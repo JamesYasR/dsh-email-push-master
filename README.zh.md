@@ -45,6 +45,21 @@ node sender.mjs --check               # 只验证配置 + SMTP 认证，不真�
 
 > 经验备注（Windows）：.NET `SmtpClient` 在 465 隐式 TLS 上有已知挂起问题——自带发送器改用 `node:tls`，无此问题。
 
+## 兼容性
+
+| DSH 版本 | 状态 |
+|---|---|
+| `0.2.0-rc.2`（当前 npm `latest`） | 支持 —— 已对实际运行时逐项验证 |
+| `< 0.2.0-rc.2`（如 `0.1.2-rc.1`） | 不支持 —— 1.3.0 对齐的是当前插件 API |
+| `>= 0.3.0` | 尚未适配 —— DSH 改动插件 API 后需同步更新 |
+
+DSH 会校验插件的 `@deepseek-ai/dsh-*` **peerDependencies** 是否满足当前运行时，不满足时**安装阶段直接拒绝**，
+而不是等到运行后崩溃：
+
+```text
+dsh: installation rejected: Plugin dsh-email-push-master@1.3.0 is incompatible with dsh 0.3.0: peerDependencies {...}
+```
+
 ## 安装（DSH）
 
 **插件安装（推荐）** —— 本 skill 以 DSH 插件形式发布，自动注册到 `ctx.skills`：
@@ -54,6 +69,15 @@ dsh plugin --profile web add dsh-email-push-master
 ```
 
 或用 GitHub 源：`dsh plugin --profile web add github:JamesYasR/dsh-email-push-master`。装完重启一次 `dsh web`，会话 skill 目录里就会出现它。
+
+**桌面版**：可以直接装进 `desktop` profile（先**完全退出**桌面版，它持有 profile 锁）：
+
+```bash
+dsh plugin --profile desktop add dsh-email-push-master
+```
+
+也可以只装 `web` profile，然后浏览器打开 `dsh web` 打印的地址——桌面版外壳复用同一个 web server，
+两边的设置界面完全一致。
 
 **手动安装（不装插件）** —— DSH 也会从 `<dshHome>/skills/<name>/SKILL.md` 发现 skill（默认 `~/.dsh/skills`），文件监视器热加载：
 
@@ -106,4 +130,8 @@ git clone https://github.com/JamesYasR/dsh-email-push-master.git "$HOME/.dsh/ski
 dsh plugin --profile web add github:JamesYasR/dsh-email-push-master
 ```
 
-装完重启 `dsh web`，到 **设置 → 插件 → 邮件推送** 里填写服务商 / 发送服务器 / 发件邮箱 / 密钥 / 收件邮箱即可；也可用 `node sender.mjs --check` 做认证自检。
+装完重启 `dsh web`，到 **设置 → 邮件推送** 里填写服务商 / 发送服务器 / 发件邮箱 / 密钥 / 收件邮箱即可；
+也可用 `node sender.mjs --check` 做认证自检。
+
+设置页由主机端 `/dsh-email-push/config` 与 `/dsh-email-push/test` 两条路由支撑；SMTP 授权码从不回显到浏览器
+（返回掩码 + `hasAuthCode` 标记，留空即保留原值）。

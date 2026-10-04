@@ -1,17 +1,28 @@
-// dsh-email-push-master client: a "邮件推送" settings card under
-// Settings → Plugins → configurable. The card shows a compact summary;
-// clicking it opens a Modal with the full SMTP config form, backed by the
-// /dsh-email-push/* host routes.
+// dsh-email-push-master client: the "邮件推送" page under Settings.
+//
+// DSH 0.2.0-rc.2 renamed/replaced the slot this card used to occupy
+// (`settings.plugin.item`, a *keyed* slot addressed by `key`). The current
+// Settings contract is `settings.section` — a *list* slot addressed by `id`,
+// declared by the shell's own settings entry, which is what every shipped
+// settings page and third-party plugin page (e.g. @xmanrui/dsh-im) registers
+// into. Registering under the old name silently no-ops, because
+// `ctx.slots.inject` waits for a declaration that never arrives.
+//
+// The form is backed by the host's /dsh-email-push/* routes; the auth code
+// never round-trips to the browser (masked echo + `hasAuthCode` flag).
 window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) => {
   var module = { exports: {} };
   var exports = module.exports;
   Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
   var React = require("react");
-  var primitives = require("@deepseek-ai/dsh-client-ui-primitives");
   var h = React.createElement;
-  var Modal = (primitives && primitives.Modal) || null;
 
   var MASKED = "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022";
+
+  // Slot contract from the DSH slot catalog: `settings.section` is a root,
+  // `list`-kind slot whose registrant options are id/order/label.
+  var SLOT = "settings.section";
+  var SECTION_ID = "dsh-email-push";
 
   var PROVIDERS = [
     { id: "163", label: "163 邮箱", host: "smtp.163.com" },
@@ -26,8 +37,18 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
     return "custom";
   }
 
-  var formStyles = {
-    root: { display: "flex", flexDirection: "column", gap: "12px", padding: "4px 0" },
+  var styles = {
+    page: { display: "flex", flexDirection: "column", gap: "16px", maxWidth: "560px" },
+    title: { margin: 0, fontSize: "18px", fontWeight: 600 },
+    intro: { margin: 0, fontSize: "13px", lineHeight: 1.6, opacity: 0.75 },
+    summary: {
+      display: "flex", flexDirection: "column", gap: "4px", padding: "12px 14px",
+      borderRadius: "10px", border: "1px solid var(--dsw-alias-border-l2)",
+      background: "var(--dsw-alias-bg-layer-3)",
+    },
+    summaryLabel: { fontSize: "12px", opacity: 0.7 },
+    summaryValue: { fontSize: "13px", fontWeight: 500, wordBreak: "break-all" },
+    form: { display: "flex", flexDirection: "column", gap: "12px" },
     field: { display: "flex", flexDirection: "column", gap: "6px" },
     label: { fontSize: "12px", opacity: 0.75, fontWeight: 500 },
     input: {
@@ -46,47 +67,13 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
     loading: { fontSize: "13px", opacity: 0.7 },
   };
 
-  var cardStyles = {
-    root: { listStyle: "none", margin: 0, padding: 0 },
-    head: {
-      display: "flex", alignItems: "center", gap: "12px", width: "100%",
-      padding: "14px 16px", background: "transparent", border: "none",
-      cursor: "pointer", color: "inherit", textAlign: "left", fontSize: "13px",
-    },
-    headText: { display: "flex", flexDirection: "column", gap: "4px", flex: 1, minWidth: 0 },
-    name: { fontWeight: 600, fontSize: "15px" },
-    desc: { fontSize: "13px", opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-    gear: { fontSize: "13px", opacity: 0.75, flexShrink: 0 },
-  };
-
-  // Card visuals matching the built-in settings cards (border + layered
-  // background + radius). Injected as real CSS so :hover works.
-  var CARD_CSS =
-    ".dsh-ep-card{border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-3);border-radius:12px;list-style:none;transition:border-color .16s,background .16s}" +
-    ".dsh-ep-card:hover{border-color:var(--dsw-alias-label-dimmed)}" +
-    ".dsh-ep-head{appearance:none;width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer;background:0 0;border:0;border-radius:12px;align-items:center;gap:12px;padding:14px 16px;display:flex}" +
-    ".dsh-ep-head:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}" +
-    ".dsh-ep-headText{flex-direction:column;flex:1;gap:4px;min-width:0;display:flex}" +
-    ".dsh-ep-name{color:var(--dsw-alias-label-primary);font-size:15px;font-weight:600;line-height:1.4}" +
-    ".dsh-ep-desc{color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:1.5}" +
-    ".dsh-ep-gear{color:var(--dsw-alias-label-tertiary);font-size:13px;flex:none}";
-
-  function installCardStyles() {
-    if (typeof document === "undefined") return;
-    if (document.getElementById("dsh-ep-styles")) return;
-    var el = document.createElement("style");
-    el.id = "dsh-ep-styles";
-    el.textContent = CARD_CSS;
-    (document.head || document.documentElement).appendChild(el);
-  }
-
   function Field(props) {
-    return h("div", { style: formStyles.field }, h("label", { style: formStyles.label }, props.label), props.children);
+    return h("div", { style: styles.field }, h("label", { style: styles.label }, props.label), props.children);
   }
 
-  // The full config form, rendered inside the Modal. `onSaved(newConfig)`
-  // lets the card refresh its summary after a successful save.
-  function EmailPushSection(props) {
+  // The whole Settings page: heading, current-state summary, the SMTP form and
+  // the save / auth self-test actions.
+  function EmailPushSection() {
     var cfgState = React.useState(null); var cfg = cfgState[0]; var setCfg = cfgState[1];
     var providerState = React.useState("custom"); var provider = providerState[0]; var setProvider = providerState[1];
     var statusState = React.useState(""); var status = statusState[0]; var setStatus = statusState[1];
@@ -141,7 +128,6 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
           if (x.ok && x.b.ok) {
             setStatus("已保存");
             setCfg(x.b.config || cfg);
-            if (typeof props.onSaved === "function") props.onSaved(x.b.config || cfg);
           } else {
             setStatus((x.b && x.b.error) || "保存失败");
           }
@@ -160,83 +146,56 @@ window.__ModuleLoader__.load({ id: "dsh-email-push-master", factory: (require) =
         .finally(function () { setBusy(false); });
     }
 
-    if (!cfg) return h("div", { style: formStyles.loading }, "加载中…");
+    if (!cfg) return h("div", { style: styles.page }, h("h2", { style: styles.title }, "邮件推送"), h("div", { style: styles.loading }, "加载中…"));
 
-    return h("div", { style: formStyles.root },
-      h(Field, { label: "服务商" },
-        h("select", {
-          value: provider,
-          style: formStyles.input,
-          onChange: function (e) {
-            var id = e.target.value;
-            for (var i = 0; i < PROVIDERS.length; i++) if (PROVIDERS[i].id === id) { pickProvider(PROVIDERS[i]); break; }
-          },
-        }, PROVIDERS.map(function (p) { return h("option", { key: p.id, value: p.id }, p.label); }))),
-      h(Field, { label: "发送服务器地址" },
-        h("input", { value: cfg.smtpHost || "", onChange: setField("smtpHost"), placeholder: "smtp.163.com", style: formStyles.input })),
-      h(Field, { label: "发件邮箱" },
-        h("input", { value: cfg.from || "", onChange: setField("from"), placeholder: "you@163.com", style: formStyles.input })),
-      h(Field, { label: "密钥（SMTP 授权码）" },
-        h("input", { type: "password", value: cfg.authCode || "", onChange: setField("authCode"), placeholder: cfg.hasAuthCode ? "已设置，留空则不变" : "16 位授权码", style: formStyles.input })),
-      h(Field, { label: "收件邮箱" },
-        h("input", { value: cfg.to || "", onChange: setField("to"), placeholder: "recipient@example.com", style: formStyles.input })),
-      h("div", { style: formStyles.actions },
-        h("button", { onClick: save, disabled: busy, style: formStyles.btn }, "保存"),
-        h("button", { onClick: test, disabled: busy, style: Object.assign({}, formStyles.btn, formStyles.btnGhost) }, "测试发送")),
-      status ? h("div", { style: formStyles.status }, status) : null);
-  }
+    var summary = cfg.from && cfg.to
+      ? cfg.from + " → " + cfg.to
+      : (cfg.from ? cfg.from : "未配置");
 
-  // Compact list card: title + summary; click opens the config Modal.
-  function EmailPushCard() {
-    var openState = React.useState(false); var open = openState[0]; var setOpen = openState[1];
-    var summaryState = React.useState("加载中…"); var summary = summaryState[0]; var setSummary = summaryState[1];
-
-    function refreshSummary() {
-      fetch("/dsh-email-push/config")
-        .then(function (r) { return r.json(); })
-        .then(function (b) {
-          var c = (b && b.config) || {};
-          if (c.from && c.to) setSummary(c.from + " → " + c.to);
-          else if (c.from) setSummary(c.from);
-          else setSummary("未配置");
-        })
-        .catch(function () { setSummary("加载失败"); });
-    }
-
-    React.useEffect(function () { refreshSummary(); }, []);
-
-    return h("li", { className: "dsh-ep-card" },
-      h("button", { type: "button", className: "dsh-ep-head", onClick: function () { setOpen(true); } },
-        h("div", { className: "dsh-ep-headText" },
-          h("div", { className: "dsh-ep-name" }, "邮件推送"),
-          h("div", { className: "dsh-ep-desc" }, summary)),
-        h("span", { className: "dsh-ep-gear" }, "⚙ 配置")),
-      open && Modal
-        ? h(Modal, {
-            open: true,
-            onClose: function () { setOpen(false); },
-            title: "邮件推送配置",
-            children: h(EmailPushSection, {
-              onSaved: function (c) {
-                if (c && c.from && c.to) setSummary(c.from + " → " + c.to);
-                else setSummary("未配置");
-              },
-            }),
-          })
-        : null);
+    return h("div", { style: styles.page },
+      h("div", null,
+        h("h2", { style: styles.title }, "邮件推送"),
+        h("p", { style: styles.intro }, "离开电脑时，让 DSH 在目标完成 / 受阻 / 需要你决定时发邮件提醒你。配置保存在本机 ~/.config/dsh-email-push-master/config.json。")),
+      h("div", { style: styles.summary },
+        h("div", { style: styles.summaryLabel }, "当前配置"),
+        h("div", { style: styles.summaryValue }, summary)),
+      h("div", { style: styles.form },
+        h(Field, { label: "服务商" },
+          h("select", {
+            value: provider,
+            style: styles.input,
+            onChange: function (e) {
+              var id = e.target.value;
+              for (var i = 0; i < PROVIDERS.length; i++) if (PROVIDERS[i].id === id) { pickProvider(PROVIDERS[i]); break; }
+            },
+          }, PROVIDERS.map(function (p) { return h("option", { key: p.id, value: p.id }, p.label); }))),
+        h(Field, { label: "发送服务器地址" },
+          h("input", { value: cfg.smtpHost || "", onChange: setField("smtpHost"), placeholder: "smtp.163.com", style: styles.input })),
+        h(Field, { label: "发件邮箱" },
+          h("input", { value: cfg.from || "", onChange: setField("from"), placeholder: "you@163.com", style: styles.input })),
+        h(Field, { label: "密钥（SMTP 授权码）" },
+          h("input", { type: "password", value: cfg.authCode || "", onChange: setField("authCode"), placeholder: cfg.hasAuthCode ? "已设置，留空则不变" : "16 位授权码", style: styles.input })),
+        h(Field, { label: "收件邮箱" },
+          h("input", { value: cfg.to || "", onChange: setField("to"), placeholder: "recipient@example.com", style: styles.input })),
+        h("div", { style: styles.actions },
+          h("button", { onClick: save, disabled: busy, style: styles.btn }, "保存"),
+          h("button", { onClick: test, disabled: busy, style: Object.assign({}, styles.btn, styles.btnGhost) }, "测试发送")),
+        status ? h("div", { style: styles.status }, status) : null));
   }
 
   exports.name = "dsh-email-push-master";
   exports.inject = ["slots"];
   exports.apply = function (ctx) {
-    installCardStyles();
-    ctx.slots.inject("settings.plugin.item", function* () {
-      yield ctx.slots.register({
-        name: "settings.plugin.item",
-        key: "dsh-email-push",
+    // `slots.inject` waits for the slot declaration, so this registers as soon
+    // as the shell's Settings entry mounts — and re-registers if it is
+    // replaced. It returns the disposer the callback contract expects.
+    ctx.slots.inject(SLOT, function () {
+      return ctx.slots.register({
+        name: SLOT,
+        id: SECTION_ID,
         order: 50,
         label: function () { return "邮件推送"; },
-      }, function () { return h(EmailPushCard); });
+      }, function () { return h(EmailPushSection); });
     });
   };
   return module.exports;
